@@ -1,7 +1,8 @@
 import './App.css';
 import { handleSongs } from './handleSongsAndImages';
 import { vidArray } from './handleSongsAndImages';
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef} from 'react';
+import { useEffect } from 'react';
 
 const MusicApp = () => {
   // State to track play/pause status
