@@ -124,15 +124,21 @@ const updateCurrentSongDetails = useCallback(async (num) => {
   // UseEffect to update song details when the track index changes
   useEffect(() => {
     updateCurrentSongDetails(musicTrack);
-  }, [musicTrack]);
+  }, [musicTrack,updateCurrentSongDetails]);// Add updateCurrentSongDetails to dependencies
 
   // UseEffect to handle song ending and move to the next one automatically
   useEffect(() => {
-    currentAudio.current.addEventListener('ended', handleNextSong);
+    const audioElement = currentAudio.current
+    if(audioElement){
+      audioElement.addEventListener('ended', handleNextSong);
+    }
+   
     return () => {
-      currentAudio.current.removeEventListener('ended', handleNextSong);
+      if (audioElement){
+        audioElement.removeEventListener('ended', handleNextSong);
+      }  
     };
-  }, [handleNextSong]);
+  }, [handleNextSong]); // Keep handleNextSong in dependencies
 
   // Function to change the background video
   const handleBgVideoChange = () => {
