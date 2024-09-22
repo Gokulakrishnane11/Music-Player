@@ -35,6 +35,7 @@ const MusicApp = () => {
   const audioContextRef = useRef(null);
   const analyserRef = useRef(null);
   const sourceRef = useRef(null);
+  
   // Ref to store requestAnimationFrame ID
   const animationIdRef = useRef(null);
 
@@ -42,14 +43,19 @@ const MusicApp = () => {
   const MusicAPI = handleSongs();
 
   // Function to play or pause the audio
-  const handleAudioPlay = () => {
-    if (currentAudio.current.paused) {
-      currentAudio.current.play();
-      setIsPlaying(true);
-    } else {
-      currentAudio.current.pause();
-      setIsPlaying(false);
+  const handleAudioPlay =async () => {
+    try {
+      if (currentAudio.current.paused) {
+        currentAudio.current.play();
+        setIsPlaying(true);
+      } else {
+        currentAudio.current.pause();
+        setIsPlaying(false);
+      }
+    } catch(error){
+      console.error('Error playing audio:', error);
     }
+   
   };
 
   // Function to handle progress bar input and seek audio
@@ -73,26 +79,30 @@ const MusicApp = () => {
 
   // Function to update song details when a track changes
   const updateCurrentSongDetails = async (num) => {
-    let musicObject = MusicAPI[num]; // Get the selected song object
-    
-    currentAudio.current.src = musicObject.audio; // Set the audio source
-
-    setCurrentMusicDetails({
-      SongName: musicObject.SongName,
-      SongArtist: musicObject.SongArtist,
-      image: musicObject.image,
-      audio: musicObject.audio,
-    });
-
     try {
-      await currentAudio.current.load(); // Load new audio
-      await currentAudio.current.play(); // Play the audio
+      const musicObject = MusicAPI[num];
+  
+      // Update state with the selected music details
+      setCurrentMusicDetails({
+        SongName: musicObject.SongName,
+        SongArtist: musicObject.SongArtist,
+        image: musicObject.image,
+        audio: musicObject.audio,
+      });
+  
+      // Load and play the audio
+      currentAudio.current.src = await musicObject.audio;
+      await currentAudio.current.load();
+      await currentAudio.current.play();
+  
+      // All good! Set isPlaying to true
       setIsPlaying(true);
     } catch (error) {
-      console.error('Error playing audio:', error);
-      setIsPlaying(false);
+      console.error('Error updating song:', error);
+      setIsPlaying(false); // Handle the error gracefully
     }
   };
+  
 
   // Function to handle time updates in the audio and update progress
   const handleAudioTimeUpdate = () => {
@@ -120,14 +130,21 @@ const MusicApp = () => {
     setAudioProgressBar(progress || 0); // Update the progress bar
   };
 
-
-  // UseEffect to handle song ending and move to the next one automatically
+  // UseEffect to update song details when the track index changes
   useEffect(() => {
-    currentAudio.current.addEventListener('ended', handleNextSong);
-    return () => {
-      currentAudio.current.removeEventListener('ended', handleNextSong);
+    updateCurrentSongDetails(musicTrack);
+  }, [musicTrack]);
+
+    // UseEffect to handle song ending and move to the next one automatically
+  useEffect(() => {
+    const handleEnded = () => {
+      handleNextSong();
     };
-  }, [handleNextSong]);
+    currentAudio.current.addEventListener('ended', handleEnded);
+    return () => {
+      currentAudio.current.removeEventListener('ended', handleEnded);
+    };
+  }, []);
 
   // Function to change the background video
   const handleBgVideoChange = () => {
