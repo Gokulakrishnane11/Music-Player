@@ -1,8 +1,7 @@
 import './App.css';
 import { handleSongs } from './handleSongsAndImages';
 import { vidArray } from './handleSongsAndImages';
-import React, { useState, useRef} from 'react';
-import { useEffect } from 'react';
+import React, { useState, useRef, useEffect ,useCallback} from 'react';
 
 const MusicApp = () => {
   // State to track play/pause status
@@ -62,38 +61,40 @@ const MusicApp = () => {
   };
 
   // Function to move to the next song
-  const handleNextSong = () => {
+  const handleNextSong = useCallback(() => {
     setMusicTrack((prevTrack) => (prevTrack >= MusicAPI.length - 1 ? 0 : prevTrack + 1));
-  };
+  }, [MusicAPI]);
 
   // Function to move to the previous song
   const handlePrevSong = () => {
     setMusicTrack((prevTrack) => (prevTrack <= 0 ? MusicAPI.length - 1 : prevTrack - 1));
   };
 
-  // Function to update song details when a track changes
-  const updateCurrentSongDetails = async (num) => {
-    let musicObject = MusicAPI[num]; // Get the selected song object
+
+// Function to update song details when a track changes
+// Define updateCurrentSongDetails as a callback
+const updateCurrentSongDetails = useCallback(async (num) => {
+  let musicObject = MusicAPI[num]; // Get the selected song object
     
-    currentAudio.current.src = musicObject.audio; // Set the audio source
+  currentAudio.current.src = musicObject.audio; // Set the audio source
 
-    setCurrentMusicDetails({
-      SongName: musicObject.SongName,
-      SongArtist: musicObject.SongArtist,
-      image: musicObject.image,
-      audio: musicObject.audio,
-    });
+  setCurrentMusicDetails({
+    SongName: musicObject.SongName,
+    SongArtist: musicObject.SongArtist,
+    image: musicObject.image,
+    audio: musicObject.audio
+  });
 
-    try {
-      await currentAudio.current.load(); // Load new audio
-      await currentAudio.current.play(); // Play the audio
-      setIsPlaying(true);
-    } catch (error) {
-      console.error('Error playing audio:', error);
-      setIsPlaying(false);
-    }
-  };
-
+  try {
+    await currentAudio.current.load(); // Load new audio
+    await currentAudio.current.play(); // Play the audio
+    setIsPlaying(true);
+  } catch (error) {
+    console.error('Error playing audio:', error);
+    setIsPlaying(false);
+  }
+}, [MusicAPI]); // Add any dependencies if needed
+  
   // Function to handle time updates in the audio and update progress
   const handleAudioTimeUpdate = () => {
     const duration = currentAudio.current.duration; // Get total duration of the song
@@ -131,7 +132,7 @@ const MusicApp = () => {
     return () => {
       currentAudio.current.removeEventListener('ended', handleNextSong);
     };
-  }, []);
+  }, [handleNextSong]);
 
   // Function to change the background video
   const handleBgVideoChange = () => {
