@@ -35,7 +35,6 @@ const MusicApp = () => {
   const audioContextRef = useRef(null);
   const analyserRef = useRef(null);
   const sourceRef = useRef(null);
-  
   // Ref to store requestAnimationFrame ID
   const animationIdRef = useRef(null);
 
@@ -63,11 +62,13 @@ const MusicApp = () => {
   // Function to move to the next song
   const handleNextSong = () => {
     setMusicTrack((prevTrack) => (prevTrack >= MusicAPI.length - 1 ? 0 : prevTrack + 1));
+    updateCurrentSongDetails(musicTrack);
   };
 
   // Function to move to the previous song
   const handlePrevSong = () => {
     setMusicTrack((prevTrack) => (prevTrack <= 0 ? MusicAPI.length - 1 : prevTrack - 1));
+    updateCurrentSongDetails(musicTrack);
   };
 
   // Function to update song details when a track changes
@@ -119,10 +120,6 @@ const MusicApp = () => {
     setAudioProgressBar(progress || 0); // Update the progress bar
   };
 
-  // UseEffect to update song details when the track index changes
-  useEffect(() => {
-    updateCurrentSongDetails(musicTrack);
-  }, [musicTrack]);
 
   // UseEffect to handle song ending and move to the next one automatically
   useEffect(() => {
