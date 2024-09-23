@@ -118,7 +118,7 @@ const MusicApp = () => {
   // Trigger song and video updates when the music track changes
   useEffect(() => {
     updateCurrentSongDetails(musicTrack); // Update song details when track changes
-  }, [musicTrack]); // Only reruns when musicTrack changes
+  }, [musicTrack,updateCurrentSongDetails]); // Only reruns when musicTrack changes
 
   // Update the progress bar and time display as the audio plays
   const handleAudioTimeUpdate = () => {
