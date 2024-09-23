@@ -1,187 +1,189 @@
-import './App.css';
-import { handleSongs } from './handleSongsAndImages';
-import { vidArray } from './handleSongsAndImages';
-import React, { useState, useRef, useEffect,useCallback } from 'react';
+import './App.css'; // Importing the CSS for the app
+import { handleSongs } from './handleSongsAndImages'; // Importing the handleSongs function
+import { vidArray } from './handleSongsAndImages'; // Importing the array of background videos
+import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react'; // Importing React hooks
 
 const MusicApp = () => {
+  // Defining various state variables
   const [isPlaying, setIsPlaying] = useState(false); // Tracks if audio is currently playing
-  const [audioProgressBar, setAudioProgressBar] = useState(0); // Tracks progress of current song (0-100)
-  const [musicTrack, setMusicTrack] = useState(0); // Index of current song in playlist
-  const [musicTotalLength, setMusicTotalLength] = useState('00:00'); // Total length of current song
-  const [musicCurrentTime, setMusicCurrentTime] = useState('00:00'); // Current time of playing song
-  const [videoIndex, setVideoIndex] = useState(0); // Index of current background video
+  const [audioProgressBar, setAudioProgressBar] = useState(0); // Tracks the progress of the current song
+  const [musicTrack, setMusicTrack] = useState(0); // Index of the current song
+  const [musicTotalLength, setMusicTotalLength] = useState('00:00'); // Total duration of the current song
+  const [musicCurrentTime, setMusicCurrentTime] = useState('00:00'); // Current playback time of the song
+  const [videoIndex, setVideoIndex] = useState(0); // Index of the current background video
   const [currentMusicDetails, setCurrentMusicDetails] = useState({
+    // Default details for the first song
     SongName: 'I Wanna Be Yours',
     SongArtist: 'Unknown',
     image: './Assests/images/img (1).jpg',
     audio: './Assests/songs/Arctic Monkeys - I Wanna Be Yours(MP3_160K).mp3',
   });
 
-    // Refs to store the audio element, AudioContext, AnalyserNode, and MediaElementSourceNode
-    const currentAudio = useRef(null);
-    const audioContextRef = useRef(null);
-    const analyserRef = useRef(null);
-    const sourceRef = useRef(null);
-  
-    // Ref to store requestAnimationFrame ID
-    const animationIdRef = useRef(null);
-  
-  
+  // Refs for audio management
+  const currentAudio = useRef(null); // Ref for the audio element
+  const audioContextRef = useRef(null); // Ref for the AudioContext
+  const analyserRef = useRef(null); // Ref for the AnalyserNode
+  const sourceRef = useRef(null); // Ref for the MediaElementSourceNode
 
-  // Fetch the song list from external data handler
-  const MusicAPI = handleSongs();
+  // Ref to store the ID of the requestAnimationFrame
+  const animationIdRef = useRef(null);
+  const isPlayingRef = useRef(isPlaying); // Ref for syncing the isPlaying state
 
-  // Load the songs and images once
+  // Sync the isPlaying state with the ref whenever it changes
   useEffect(() => {
-    updateCurrentSongDetails(musicTrack);
-  }, [musicTrack]);
+    isPlayingRef.current = isPlaying;
+  }, [isPlaying]);
 
-  // Handle play/pause
+  // Memoize the MusicAPI to avoid recomputing it on every render
+  const MusicAPI = useMemo(() => handleSongs(), []);
+
+  // Function to handle play/pause action
   const handleAudioPlay = () => {
     if (currentAudio.current.paused) {
-      currentAudio.current.play();
-      setIsPlaying(true);
+      currentAudio.current.play(); // Play the audio if paused
+      setIsPlaying(true); // Update state to reflect that the audio is playing
     } else {
-      currentAudio.current.pause();
-      setIsPlaying(false);
+      currentAudio.current.pause(); // Pause the audio if already playing
+      setIsPlaying(false); // Update state to reflect the pause
     }
   };
 
-  // Handle progress bar change
+  // Function to handle changes in the progress bar
   const handleProgressChange = (e) => {
-    const newValue = e.target.value;
-    setAudioProgressBar(newValue);
-    // Set current time of audio based on progress bar value
-    currentAudio.current.currentTime = (newValue * currentAudio.current.duration) / 100;
+    const newValue = e.target.value; // Get the new value of the progress bar
+    setAudioProgressBar(newValue); // Update the progress bar state
+    currentAudio.current.currentTime = (newValue * currentAudio.current.duration) / 100; // Update the current audio time
   };
 
-  // Handle next song
+  // Function to handle switching to the next song
   const handleNextSong = () => {
-    const nextSong = musicTrack >= MusicAPI.length - 1 ? 0 : musicTrack + 1;
-    setMusicTrack(nextSong);
-    setIsPlaying(true); // Autoplay the next song
-    // Change background video
-    // setVideoIndex(videoIndex >= vidArray.length - 1 ? 0 : videoIndex + 1);
+    const nextSong = musicTrack >= MusicAPI.length - 1 ? 0 : musicTrack + 1; // Cycle to the next song or loop back to the start
+    setMusicTrack(nextSong); // Update the song track
+    setIsPlaying(true); // Automatically play the next song
   };
 
-  // Handle previous song
+  // Function to handle switching to the previous song
   const handlePrevSong = () => {
-    const prevSong = musicTrack <= 0 ? MusicAPI.length - 1 : musicTrack - 1;
-    setMusicTrack(prevSong);
-    setIsPlaying(true);
-     // Change background video
-    // setVideoIndex(videoIndex >= vidArray.length - 1 ? 0 : videoIndex + 1);
+    const prevSong = musicTrack <= 0 ? MusicAPI.length - 1 : musicTrack - 1; // Cycle to the previous song or loop back
+    setMusicTrack(prevSong); // Update the song track
+    setIsPlaying(true); // Automatically play the previous song
   };
 
-  // Function to update song details when a track changes
+  // Update the song details when the track changes
   const updateCurrentSongDetails = useCallback(
     async (num) => {
       try {
-        const musicObject = MusicAPI[num];
+        const musicObject = MusicAPI[num]; // Get song details based on the track index
 
-        // Update state with the selected music details
-        setCurrentMusicDetails({
-          SongName: musicObject.SongName,
-          SongArtist: musicObject.SongArtist,
-          image: musicObject.image,
-          audio: musicObject.audio,
+        // Update song details only if necessary
+        setCurrentMusicDetails((prevDetails) => {
+          if (
+            prevDetails.SongName === musicObject.SongName &&
+            prevDetails.SongArtist === musicObject.SongArtist &&
+            prevDetails.image === musicObject.image &&
+            prevDetails.audio === musicObject.audio
+          ) {
+            return prevDetails; // No change if song details are the same
+          }
+          return {
+            SongName: musicObject.SongName,
+            SongArtist: musicObject.SongArtist,
+            image: musicObject.image,
+            audio: musicObject.audio,
+          };
         });
 
         if (currentAudio.current) {
-          // Pause the current audio if it's playing
-          currentAudio.current.pause();
-          // Load and play the audio
-          currentAudio.current.src = await musicObject.audio;
-          await currentAudio.current.load();
-          if (isPlaying) {
-            try {
-              await currentAudio.current.play();
-              // All good! Set isPlaying to true
-              setIsPlaying(true);
-            } catch (playError) {
-              console.error("Error playing audio:", playError);
-              setIsPlaying(false);
-            }
+          if (!currentAudio.current.paused) {
+            await currentAudio.current.pause(); // Pause the audio if playing
+          }
+
+          // Set a new audio source if the audio is different
+          if (currentAudio.current.src !== musicObject.audio) {
+            currentAudio.current.src = musicObject.audio;
+            await currentAudio.current.load(); // Load the new audio source
+          }
+
+          if (isPlayingRef.current) {
+            await currentAudio.current.play(); // Autoplay if the song is playing
           }
         }
       } catch (error) {
-        console.error("Error updating song:", error);
-        setIsPlaying(false); // Handle the error gracefully
+        console.error("Error updating song:", error); // Error handling
       }
     },
-    [MusicAPI]
+    [MusicAPI] // Only updates when MusicAPI changes
   );
 
-  // Update audio progress and time displays
+  // Trigger song and video updates when the music track changes
+  useEffect(() => {
+    updateCurrentSongDetails(musicTrack); // Update song details when track changes
+  }, [musicTrack]); // Only reruns when musicTrack changes
+
+  // Update the progress bar and time display as the audio plays
   const handleAudioTimeUpdate = () => {
     if (!currentAudio.current.duration) return; // Prevent NaN errors
 
-    // Calculate and set total length of the audio
+    // Calculate and display the total song duration
     const minutes = Math.floor(currentAudio.current.duration / 60).toString();
     const seconds = Math.floor(currentAudio.current.duration % 60).toString();
     const musicTotalTime = `${minutes < 10 ? `0${minutes}` : minutes}:${seconds < 10 ? `0${seconds}` : seconds}`;
     setMusicTotalLength(musicTotalTime);
 
-    // Calculate and set current time of the audio
+    // Calculate and display the current song time
     const currentMinutes = Math.floor(currentAudio.current.currentTime / 60).toString();
     const currentSeconds = Math.floor(currentAudio.current.currentTime % 60).toString();
     const songCurrentTime = `${currentMinutes < 10 ? `0${currentMinutes}` : currentMinutes}:${currentSeconds < 10 ? `0${currentSeconds}` : currentSeconds}`;
     setMusicCurrentTime(songCurrentTime);
 
-    // Update progress bar
+    // Update the progress bar
     const progress = (currentAudio.current.currentTime / currentAudio.current.duration) * 100;
     setAudioProgressBar(isNaN(progress) ? 0 : progress); // Prevent NaN values
   };
 
-  // Handle background video change
+  // Change the background video
   const handleBgVideoChange = () => {
-    setVideoIndex(videoIndex >= vidArray.length - 1 ? 0 : videoIndex + 1);
+    setVideoIndex(videoIndex >= vidArray.length - 1 ? 0 : videoIndex + 1); // Cycle through background videos
   };
 
-  // RGB background light effect
+  // Create an RGB lighting effect based on the audio frequencies
   useEffect(() => {
     if (!audioContextRef.current) {
-      // Initialize AudioContext and nodes only once
-      audioContextRef.current = new (window.AudioContext ||
-        window.webkitAudioContext)();
-      analyserRef.current = audioContextRef.current.createAnalyser();
-
-      sourceRef.current = audioContextRef.current.createMediaElementSource(
-        currentAudio.current
-      ); // Create source node from audio element
-      sourceRef.current.connect(analyserRef.current); // Connect source to analyser
-      analyserRef.current.connect(audioContextRef.current.destination); // Connect analyser to destination (speakers)
+      audioContextRef.current = new (window.AudioContext || window.webkitAudioContext)(); // Create the AudioContext
+      analyserRef.current = audioContextRef.current.createAnalyser(); // Create an AnalyserNode
+      sourceRef.current = audioContextRef.current.createMediaElementSource(currentAudio.current); // Create a source from the audio element
+      sourceRef.current.connect(analyserRef.current); // Connect the source to the analyser
+      analyserRef.current.connect(audioContextRef.current.destination); // Connect the analyser to the speakers
     }
 
-    // If playing, ensure AudioContext is resumed
+    // If the audio is playing, ensure the AudioContext is resumed
     if (isPlaying && audioContextRef.current.state === "suspended") {
       audioContextRef.current.resume();
     }
 
-    const dataArray = new Uint8Array(analyserRef.current.frequencyBinCount); // Create an array for frequency data
+    const dataArray = new Uint8Array(analyserRef.current.frequencyBinCount); // Array for frequency data
 
     const animateShadow = () => {
       analyserRef.current.getByteFrequencyData(dataArray); // Get frequency data
-      const avgFreq =
-        dataArray.reduce((sum, value) => sum + value) / dataArray.length; // Calculate average frequency
+      const avgFreq = dataArray.reduce((sum, value) => sum + value) / dataArray.length; // Average frequency
 
-      // Calculate RGB color values based on frequency
+      // Create RGB values based on frequency
       const r = Math.floor((avgFreq * 2) % 255);
       const g = Math.floor((avgFreq * 3) % 255);
       const b = Math.floor((avgFreq * 4) % 255);
 
-      // Apply the box shadow effect using calculated RGB values
+      // Apply the box shadow effect with RGB colors
       const musicContainer = document.querySelector(".music-container");
       if (musicContainer) {
         musicContainer.style.boxShadow = `0 0 20px rgba(${r}, ${g}, ${b}, 0.7), 0 0 40px rgba(${r}, ${g}, ${b}, 0.7), 0 0 80px rgba(${r}, ${g}, ${b}, 0.7)`;
       }
 
-      // Request the next animation frame
-      animationIdRef.current = requestAnimationFrame(animateShadow);
+      animationIdRef.current = requestAnimationFrame(animateShadow); // Continue animation
     };
 
-    // Start animation if playing, otherwise cancel it
-    if (isPlaying) {
+    // Start or stop the shadow animation based on isPlaying
+    if (isPlaying)
+ {
       animateShadow();
     } else {
       cancelAnimationFrame(animationIdRef.current);
