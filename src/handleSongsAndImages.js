@@ -154,9 +154,9 @@ export const handleSongs=()=>{
 
  // Array of background video sources
  export const vidArray = [
-  './Assests/videos/Video (1).mp4', './Assests/videos/Video (2).mp4',
-  //'./Assests/videos/Video (3).mp4', './Assests/videos/Video (4).mp4',
-  //'./Assests/videos/Video (5).mp4', //'./Assests/videos/Video (6).mp4',
+   './Assests/videos/peace-and-natrue.gif','./Assests/videos/Dancing.gif',
+  './Assests/videos/kikis delivery service majo no takkybin GIF by Maudit (1).gif', './Assests/videos/kikis delivery service majo no takkybin GIF by Maudit.gif',
+  './Assests/videos/Studio Ghibli GIF by Spirited Away.gif', './Assests/videos/Tik Tok Dancing GIF.gif',
   // './Assests/videos/Video (7).mp4', './Assests/videos/Video (8).mp4',
   // './Assests/videos/Video (9).mp4', './Assests/videos/Video (10).mp4',
   // './Assests/videos/Video (11).mp4', './Assests/videos/Video (12).mp4',

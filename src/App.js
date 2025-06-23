@@ -205,7 +205,7 @@ const MusicApp = () => {
         ></audio>
 
         {/* Background video */}
-        <video src={vidArray[videoIndex]} autoPlay muted loop className='bg-video'></video>
+        <img src={vidArray[videoIndex]} alt='bg gif'  className='bg-video'></img>
 
         <div className="blackScreen"></div>
 
